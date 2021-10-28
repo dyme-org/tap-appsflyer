@@ -1,5 +1,5 @@
 import singer
-from transform import *
+from .transform import *
 from datetime import datetime, timedelta, timezone
 
 LOGGER = singer.get_logger()
