@@ -16,7 +16,8 @@ SESSION = requests.Session()
 API_LIMITS = {
     'in_app_events_report': 31, # days
     'installs_report': 60,
-    'uninstalls_report': 60
+    'uninstalls_report': 60,
+    'partners_by_date_report': 365
 }
 
 
@@ -109,24 +110,33 @@ class AppsflyerClient():
         ])
 
     
-    def _parse_raw_api_params(self,from_datetime,to_datetime):
+    def _parse_raw_api_params(self,from_datetime,to_datetime,date_fmt):
         params = dict()
-        params["from"] = from_datetime.strftime("%Y-%m-%d %H:%M")
-        params["to"] = to_datetime.strftime("%Y-%m-%d %H:%M")
+        params["from"] = from_datetime.strftime(date_fmt)
+        params["to"] = to_datetime.strftime(date_fmt)
+        params["api_token"] = self.config["api_token"]
+        
+        return params
+    
+    def _parse_daily_api_params(self,from_datetime,to_datetime):
+        params = dict()
+        params["from"] = from_datetime.strftime("%Y-%m-%d")
+        params["to"] = to_datetime.strftime("%Y-%m-%d")
         params["api_token"] = self.config["api_token"]
         
         return params
 
 
-    def get_raw_data(self,report_name,report_version,from_datetime,to_datetime,fieldnames):
+    def get_data(self,report_name,report_version,from_datetime,to_datetime,fieldnames,date_fmt):
         # Raw data: https://support.appsflyer.com/hc/en-us/articles/360007530258-Using-Pull-API-raw-data
+        # Agg Data: https://support.appsflyer.com/hc/en-us/articles/207034346-Using-Pull-API-aggregate-data
 
         req_intervals = self._get_request_intervals(report_name,from_datetime,to_datetime)        
         csv_data_chained = []
 
         for req_interval in req_intervals:
             url = self._get_url(report_name,report_version)
-            params = self._parse_raw_api_params(req_interval['from'],req_interval['to'])
+            params = self._parse_raw_api_params(req_interval['from'],req_interval['to'],date_fmt)
 
             request_data = self._request(url, params)
             
@@ -137,9 +147,3 @@ class AppsflyerClient():
         reader = csv.DictReader(csv_data_chained, fieldnames)
         
         return reader
-
-
-    def get_daily_report(self,start_datetime,end_datetime):
-        # Agg Data: https://support.appsflyer.com/hc/en-us/articles/207034346-Using-Pull-API-aggregate-data
-        pass
-

@@ -9,7 +9,7 @@ def xform_datetime_field(record, field_name):
 
 
 def xform_boolean_field(record, field_name):
-    value = record[field_name]
+    value = record.get(field_name)
     if value is None:
         return
 
